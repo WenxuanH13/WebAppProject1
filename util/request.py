@@ -1,7 +1,7 @@
 class Request:
 
     def __init__(self, request: bytes):
-        # TODO: parse the bytes of the request and populate the following instance variables
+        # TODO: parse the bytes of the request and populate the following instance variable  
 
         self.body = b""
         self.method = ""
@@ -9,6 +9,23 @@ class Request:
         self.http_version = ""
         self.headers = {}
         self.cookies = {}
+
+        decodeString = request.decode()
+
+        lines = decodeString.split('\r\n')
+        requestLine = lines[0].split(' ')
+
+        self.method = requestLine[0]
+        self.path = requestLine[1]
+        self.http_version = requestLine[2]
+
+        for line in lines[1:]:
+            if line == '':
+                break
+            part = line.split(':', 1)
+            key = part[0]
+            value = part[1].strip()
+            self.headers[key] = value
 
 
 def test1():
