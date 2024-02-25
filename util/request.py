@@ -11,6 +11,7 @@ class Request:
         self.cookies = {}
 
         decodeString = request.decode()
+        #print(decodeString)
 
         lines = decodeString.split('\r\n')
         requestLine = lines[0].split(' ')
@@ -26,10 +27,19 @@ class Request:
             key = part[0].strip()
             value = part[1].strip()
             self.headers[key] = value
+            if key == "Cookie":
+                cookiess = value.split(';')
+                for cookie in cookiess:
+                    cookiePart = cookie.split('=')
+                    cookieKey = cookiePart[0].strip()
+                    cookieVal = cookiePart[1].strip()
+                    self.cookies[cookieKey] = cookieVal
+
         
         bodyIndex = decodeString.find('\r\n\r\n')
         if bodyIndex != -1:
             self.body = request[bodyIndex + len('\r\n\r\n'):]
+        #print(self.path)
         
         
         
@@ -68,7 +78,12 @@ def test3():
     assert request.headers["Content-Length"] == "27" # note: The leading space in the header value must be removed
     assert request.body == b"field1=value1&field2=value2"
 
+
+def test4():
+    request = Request(b'POST /pathdaddas HTTP/1.1\r\nContent-Type: text/plain\r\nCookie: id=X6kAwpgW29M; visits=4; username=John; password=hi\r\nContent-Length: 10\r\n\r\nhellodasad')
+
 if __name__ == '__main__':
     test1()
     test2()
     test3()
+    test4()
