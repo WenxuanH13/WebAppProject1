@@ -15,7 +15,8 @@ class Request:
 
         lines = decodeString.split('\r\n')
         requestLine = lines[0].split(' ')
-
+        if (requestLine[0] == ""):
+            return
         self.method = requestLine[0]
         self.path = requestLine[1]
         self.http_version = requestLine[2]
@@ -82,8 +83,23 @@ def test3():
 def test4():
     request = Request(b'POST /pathdaddas HTTP/1.1\r\nContent-Type: text/plain\r\nCookie: id=X6kAwpgW29M; visits=4; username=John; password=hi\r\nContent-Length: 10\r\n\r\nhellodasad')
 
+def test5():
+    request = Request(b'POST /chat-messages/2 HTTP/1.1\r\nHost: foo.example\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 27\r\n\r\nfield1=value1&field2=value2')
+    assert request.method == "POST"
+    #print(request.path)
+    assert request.path == "/chat-messages/2"
+    assert request.http_version == "HTTP/1.1"
+    assert "Host" in request.headers
+    assert request.headers["Host"] == "foo.example"  # note: The leading space in the header value must be removed
+    assert "Content-Type" in request.headers
+    assert request.headers["Content-Type"] == "application/x-www-form-urlencoded"  # note: The leading space in the header value must be removed
+    assert "Content-Length" in request.headers
+    assert request.headers["Content-Length"] == "27" # note: The leading space in the header value must be removed
+    assert request.body == b"field1=value1&field2=value2"
+
 if __name__ == '__main__':
     test1()
     test2()
     test3()
     test4()
+    test5()

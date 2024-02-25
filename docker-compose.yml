@@ -1,6 +1,12 @@
-version: '3'
+version: '3.3'
 services:
-   app:
-        build: .     
-        ports:       
-          - '8080:8080'
+  database:
+    image: mongo:7.0
+    ports:
+      - '27017:27017' 
+  app:
+    build: .
+    environment:
+      WAIT_HOSTS: database:27017 
+    ports:       
+      - '8080:8080'
