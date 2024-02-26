@@ -50,6 +50,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
             'public/style.css',
             'public/webrtc.js'
         }
+        
         if request.path == '/chat-messages':
             if request.method == 'GET':
                 self.request.sendall(self.send_chatGET())
@@ -58,18 +59,31 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 self.request.sendall(self.send_store_chatPOST(request))
                 return
         if request.path.startswith('/chat-messages/'):
-            print(1)
             if request.method == 'GET':
                 if self.check_message_exist(request) == True:
                     self.request.sendall(self.send_chatGET_Specific(request))
                     return
                 else:
-                    print(2)
                     self.request.sendall(self.generate404())
                     return
             elif request.method == 'POST':
                 self.request.sendall(self.send_store_chatPOST(request))
                 return
+            elif request.method == 'DELETE':
+                if self.check_message_exist(request) == True:
+                    self.request.sendall(self.sendDeleteMessage(request))
+                    return
+                else:
+                    self.request.sendall(self.generate404())
+                    return
+            elif request.method == 'PUT':
+                if self.check_message_exist(request) == True:
+                    self.request.sendall(self.sendPutMessage(request))
+                    return
+                else:
+                    self.request.sendall(self.generate404())
+                    return
+
 
         #LO2 start
         if request.path == '/':
@@ -296,7 +310,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
     def check_message_exist(self, request):
         requestedMessageID = request.path.split('/')[-1]
-        message = self.chat_collection.find_one({"id": int(requestedMessageID)}, {"_id":0, "message": 1, "username": 1, "id": 1})
+        message = self.chat_collection.find_one({"id": int(requestedMessageID)})
         if message == None:
             return False
         else:
@@ -310,6 +324,51 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
         body["username"] = message["username"]
         body["id"] = message["id"]
         body = json.dumps(body)
+        status = "HTTP/1.1 200 OK\r\n"
+        headers = {
+            "Content-Type": "application/json",
+            "Content-Length": str(len(body)),
+            "X-Content-Type-Options": "nosniff" 
+        }
+        responseHeader = ""
+        for key, value in headers.items():
+            responseHeader += key + ": " + value + "\r\n"
+        responseHeader += "\r\n"
+        response = status + responseHeader
+        response += body
+        response = response.encode()
+        
+        return response
+
+    def sendDeleteMessage(self, request):
+        requestedMessageID = request.path.split('/')[-1]
+        self.chat_collection.delete_one({"id": int(requestedMessageID)})
+        status = "HTTP/1.1 204 No Content\r\n"
+        headers = {
+            "X-Content-Type-Options": "nosniff" 
+        }
+        responseHeader = ""
+        for key, value in headers.items():
+            responseHeader += key + ": " + value + "\r\n"
+        responseHeader += "\r\n"
+        response = status + responseHeader
+        response = response.encode()
+        
+        return response
+
+    def sendPutMessage(self, request):
+        requestedMessageID = request.path.split('/')[-1]
+        newMessage = json.loads(request.body)
+        updateMessage = {
+            "$set": {
+            "message":html.escape(newMessage["message"]),
+            "username":html.escape(newMessage["username"])
+            }
+        }
+        self.chat_collection.update_one({"id":int(requestedMessageID)},updateMessage)
+        message = self.chat_collection.find_one({"id": requestedMessageID},{})
+        message.pop("_id")
+        body = json.dumps(message)
         status = "HTTP/1.1 200 OK\r\n"
         headers = {
             "Content-Type": "application/json",
