@@ -34,6 +34,7 @@
 
 
         <div class="chat-form">
+            <input hidden id="xsrf_token" value="{{INSERT TOKEN}}">
             <hr>
             <label>
                 Chat:
@@ -82,6 +83,17 @@
                 <input id="login-form-pass" type="password" name="password_login">
             </label>
             <input type="submit" value="Post">
+        </form>
+        
+        Login with spotify:
+        <form action="/spotify" method="post" enctype="application/x-www-form-urlencoded">
+            <br/>
+            <input type="submit" value="LogIn">
+        </form>
+
+        Logout:
+        <form action="/logout" method="post" enctype="application/x-www-form-urlencoded">
+            <input type="submit" value="Logout">
         </form>
 
 
